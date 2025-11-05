@@ -6,6 +6,8 @@ on:
   push:
     branches:
       - main
+  # allow manual triggering via the GitHub API (workflow_dispatch)
+  workflow_dispatch:
 jobs:
   build_and_deploy:
     runs-on: ubuntu-latest

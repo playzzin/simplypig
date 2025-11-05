@@ -62,11 +62,53 @@
     <h1>로컬 서버에 접속하기</h1>
     <p>아래 버튼을 클릭하여 5000 포트의 로컬 서버에 접속하세요.</p>
     <a href="http://localhost:5000" class="btn">5000 포로 접속</a>
+    <button id="deploy-btn" class="btn" style="background:#1976d2">배포하기 (GitHub)</button>
     
     <div class="info">
       <p>로컬 서버가 실행 중이지 않다면, 터미널에서 다음 명령어를 실행해주세요:</p>
       <code>python server.py</code>
     </div>
+    <div class="info" id="deploy-info" style="margin-top:12px"></div>
   </div>
+  <script>
+    // GitHub Actions workflow dispatch from browser.
+    // SECURITY: This requires a Personal Access Token (PAT) with 'repo' and 'workflow' permissions.
+    // The token is used only in-memory in the browser and is NOT stored by this page.
+    (function(){
+      const btn = document.getElementById('deploy-btn');
+      const info = document.getElementById('deploy-info');
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        const token = prompt('GitHub Personal Access Token (repo + workflow 권한 필요)\n(입력한 값은 이 페이지에서만 사용되며 저장되지 않습니다)');
+        if (!token) return;
+        info.textContent = '배포 요청 전송 중...';
+        try {
+          const owner = 'playzzin';
+          const repo = 'simplypig';
+          const workflow = 'firebase-hosting-merge.yml';
+          const url = `https://api.github.com/repos/${owner}/${repo}/actions/workflows/${workflow}/dispatches`;
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Authorization': 'token ' + token,
+              'Accept': 'application/vnd.github+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ ref: 'main' })
+          });
+          if (resp.status === 204) {
+            info.innerHTML = '성공: 워크플로우 실행을 요청했습니다. GitHub Actions에서 배포가 시작됩니다.';
+          } else {
+            const txt = await resp.text();
+            info.innerHTML = `실패: HTTP ${resp.status} - ${resp.statusText} <br> ${escapeHtml(txt)}`;
+          }
+        } catch (e) {
+          info.textContent = '오류: ' + e.message;
+        }
+      });
+
+      function escapeHtml(s){ return s.replace(/[&<>\"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+    })();
+  </script>
 </body>
 </html>
