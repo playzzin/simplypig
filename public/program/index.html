@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticky Notes Pro</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 overflow-hidden h-screen">
+
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 space-y-2"></div>
+
+    <div id="app" class="flex flex-col h-screen">
+        
+        <!-- Header/Toolbar -->
+        <header class="bg-white dark:bg-gray-800 shadow-md p-1 sm:p-2 z-50 relative print:hidden">
+            <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-1 sm:gap-2">
+                
+                <!-- Logo and Add Note Button -->
+                <div class="flex items-center gap-1 sm:gap-3">
+                    <a href="index.html" class="text-sm sm:text-lg font-bold text-blue-600 dark:text-blue-400" title="첫 페이지로">메모장</a>
+                    <button id="add-note-btn" class="flex items-center gap-1 sm:gap-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-2 py-0.5 sm:px-2 sm:py-1 rounded-lg shadow-sm transition-transform active:scale-95">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                        <span class="hidden sm:inline text-sm">새 메모</span>
+                    </button>
+                </div>
+
+                <!-- Search and Sort -->
+                <div class="flex flex-grow sm:flex-grow-0 items-center gap-1 sm:gap-2 w-full sm:w-auto order-3 sm:order-2">
+                    <!-- Search Input -->
+                    <div class="relative flex-grow">
+                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </span>
+                        <input type="search" id="search-input" placeholder="검색..." class="w-full pl-7 pr-2 py-0.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 sm:pl-8 sm:pr-3 sm:py-1 sm:text-sm">
+                    </div>
+
+                    <!-- Sort Button -->
+                    <button id="sort-btn" class="flex-shrink-0 flex items-center gap-1 sm:gap-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-2 py-0.5 rounded-lg shadow-sm transition-transform active:scale-95 sm:px-2 sm:py-1">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                        <span id="sort-label" class="text-xs sm:text-sm font-medium">최근 순</span>
+                    </button>
+
+                    <!-- Toggle Size Button -->
+                    <button id="toggle-size-btn" class="flex-shrink-0 flex items-center gap-1 sm:gap-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 px-2 py-0.5 rounded-lg shadow-sm transition-transform active:scale-95 sm:px-2 sm:py-1" title="메모 크기 토글">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m0 0l5-5m11 5v-4m0 0h-4m4 0l-5-5"></path></svg>
+                        <span id="toggle-size-label" class="hidden sm:inline text-xs sm:text-sm font-medium">축소</span>
+                    </button>
+                </div>
+                
+                <!-- Color Filter and Management -->
+                <div class="flex items-center gap-1 sm:gap-2 order-2 sm:order-3">
+                    <div id="color-filter-container" class="flex items-center gap-1 sm:gap-2">
+                        <!-- 'All' Button -->
+                        <button class="color-filter-btn active w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-white dark:border-gray-800 shadow-sm flex items-center justify-center bg-gray-300 dark:bg-gray-500 text-gray-700 dark:text-gray-200" data-color="all" title="전체 보기">
+                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a8 8 0 01-8 8m8-8a8 8 0 00-8-8m8 8a8 8 0 00-8 8m0 0a8 8 0 00-8-8m8 8H5m14 0h-4"></path></svg>
+                        </button>
+                    </div>
+                    <button id="manage-colors-btn" class="w-6 h-6 sm:w-7 sm:h-7 rounded-full border-2 border-dashed border-gray-400 dark:border-gray-500 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:border-gray-600 dark:hover:border-gray-300 transition" title="색상 관리">
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    </button>
+                </div>
+
+            </div>
+        </header>
+
+        <!-- Notes Board -->
+        <main id="notes-container" class="flex-grow relative overflow-auto touch-none z-0"></main>
+    </div>
+
+    <!-- Color Management Modal -->
+    <div id="color-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 hidden">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-full max-w-md">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">색상 관리</h2>
+                <button id="close-color-modal" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <!-- Add Color Form -->
+            <div class="flex gap-3 mb-6">
+                <input type="color" id="color-picker-input" class="w-12 h-12 p-0 border-none rounded-lg cursor-pointer" value="#FDE047">
+                <input type="text" id="color-name-input" placeholder="색상 이름 (예: 중요)" class="flex-grow px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button id="add-color-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-4 py-2 rounded-lg shadow-sm transition-transform active:scale-95">추가</button>
+            </div>
+
+            <!-- Color List -->
+            <div id="color-list-container" class="space-y-3 max-h-60 overflow-y-auto">
+                <!-- Color items will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Note Template (Hidden) -->
+    <template id="note-template">
+        <div class="note absolute w-64 h-64 min-w-[200px] min-h-[200px] flex flex-col rounded-lg shadow-xl" style="left: 50px; top: 50px; background-color: #FDE047;">
+            <!-- Note Toolbar -->
+            <div class="note-toolbar flex items-center justify-between p-2 border-b border-black/10">
+                <div class="flex items-center gap-1">
+                    <!-- Color Change Palette -->
+                    <div class="color-palette-wrapper relative">
+                        <button class="note-color-btn w-6 h-6 rounded-full border border-black/20 flex items-center justify-center text-black/40" title="색상 변경">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M4 2a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V4a2 2 0 00-2-2H4zm0 2h12v12H4V4z" clip-rule="evenodd"></path><path d="M6 6a2 2 0 100 4 2 2 0 000-4zm0 6a2 2 0 100 4 2 2 0 000-4zm6-6a2 2 0 100 4 2 2 0 000-4zm0 6a2 2 0 100 4 2 2 0 000-4z"></path></svg>
+                        </button>
+                        <div class="note-color-palette hidden absolute top-full left-0 mt-2 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-xl z-50 flex flex-wrap gap-2 w-32">
+                            <!-- Colors will be dynamically added here -->
+                        </div>
+                    </div>
+                    <!-- Add Checklist -->
+                    <button class="note-add-checklist-btn w-6 h-6 rounded-full hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-black/60 dark:text-white/60" title="체크리스트 추가">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
+                    </button>
+                </div>
+                <div class="note-drag-handle flex-grow h-full cursor-grab active:cursor-grabbing"></div>
+                <div class="flex items-center gap-1">
+                    <!-- Layer Buttons -->
+                    <button class="note-front-btn w-6 h-6 rounded-full hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-black/60 dark:text-white/60" title="맨 앞으로 가져오기">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 11l7-7 7 7M5 19l7-7 7 7"></path></svg>
+                    </button>
+                    <button class="note-back-btn w-6 h-6 rounded-full hover:bg-black/10 dark:hover:bg-white/10 flex items-center justify-center text-black/60 dark:text-white/60" title="맨 뒤로 보내기">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7M19 5l-7 7-7-7"></path></svg>
+                    </button>
+                    <!-- Delete Button -->
+                    <button class="note-delete-btn w-6 h-6 rounded-full hover:bg-red-500 hover:text-white flex items-center justify-center text-black/60 dark:text-white/60" title="삭제">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Note Content -->
+            <textarea class="note-content flex-grow w-full p-3 bg-transparent text-black dark:text-black placeholder-black/40 dark:placeholder-black/40 focus:outline-none resize-none overflow-auto" placeholder="메모를 입력하세요..."></textarea>
+
+            <!-- Checklist Container -->
+            <div class="note-checklist-container p-3 pt-0 space-y-2 overflow-y-auto" style="max-height: 150px;">
+                <!-- Checklist items will be added here -->
+            </div>
+            
+            <!-- Resize Handle -->
+            <div class="resize-handle absolute bottom-1 right-1 w-4 h-4 cursor-se-resize text-black/30">
+                <svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M14.243 14.243a1 1 0 010-1.414L15.657 11.414a1 1 0 011.414 0l.707.707a1 1 0 010 1.414l-1.414 1.414a1 1 0 01-1.414 0l-.707-.707zM10 15.657l-1.414-1.414a1 1 0 010-1.414l.707-.707a1 1 0 011.414 0l1.414 1.414a1 1 0 010 1.414l-.707.707a1 1 0 01-1.414 0zM5.757 14.243l-1.414 1.414a1 1 0 01-1.414 0l-.707-.707a1 1 0 010-1.414l1.414-1.414a1 1 0 011.414 0l.707.707a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>
+            </div>
+        </div>
+    </template>
+
+    <!-- Checklist Item Template (Hidden) -->
+    <template id="checklist-item-template">
+        <div class="note-checklist-item flex items-center gap-2 group">
+            <input type="checkbox" class="note-checklist-item-check w-5 h-5 rounded border-gray-400 text-blue-600 focus:ring-blue-500 flex-shrink-0">
+            <input type="text" class="note-checklist-item-text flex-grow bg-transparent border-b border-black/10 focus:outline-none focus:border-black/30 p-1 text-black dark:text-black">
+            <button class="note-checklist-item-delete w-6 h-6 rounded-full hover:bg-black/10 flex-shrink-0 flex items-center justify-center text-black/50 opacity-0 group-hover:opacity-100 transition-opacity" title="항목 삭제">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+    </template>
+    <script src="app.js"></script>
+</body>
+</html>
