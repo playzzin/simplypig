@@ -7,6 +7,16 @@ const nonAccordionItems = document.querySelectorAll('.menu-list li:not(.has-subm
 const allMenuLinks = document.querySelectorAll('.menu-list a');
 const contentFrame = document.getElementById('content-frame');
 
+// Fallback: set anchor target to iframe name so clicks load into iframe even if JS is disabled/fails
+allMenuLinks.forEach(l => {
+  try {
+    const href = l.getAttribute('href');
+    if (isPageLink(href)) {
+      l.setAttribute('target', 'content-frame');
+    }
+  } catch(_){}
+});
+
 function normalizePageHref(href){
   if (!href) return '';
   const trimmed = href.trim();
