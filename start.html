@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>스티키 메모 개발 시작하기</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .link-card {
+            transition: transform 0.2s;
+        }
+        .link-card:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
+    <div class="max-w-4xl mx-auto p-8">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl font-bold mb-4">스티키 메모 개발 시작하기</h1>
+            <p class="text-gray-600 dark:text-gray-400">로컬 개발 서버로 시작하기</p>
+        </header>
+
+        <div class="grid gap-6 md:grid-cols-2">
+            <!-- VS Code Live Server -->
+            <div class="link-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    VS Code Live Server로 실행
+                </h2>
+                <ol class="list-decimal list-inside space-y-2 text-gray-700 dark:text-gray-300">
+                    <li>VS Code에서 Live Server 확장 설치</li>
+                    <li>프로젝트 폴더에서 <code class="bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">index.html</code> 우클릭</li>
+                    <li>"Live Server로 열기" 선택</li>
+                </ol>
+            </div>
+
+            <!-- NPX Serve -->
+            <div class="link-card bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg class="w-6 h-6 mr-2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    NPX로 실행
+                </h2>
+                <div class="space-y-2 text-gray-700 dark:text-gray-300">
+                    <p>터미널에서 실행:</p>
+                    <pre class="bg-gray-100 dark:bg-gray-700 p-3 rounded overflow-x-auto"><code>npx serve .</code></pre>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="md:col-span-2 mt-6">
+                <h3 class="text-lg font-semibold mb-4">빠른 링크</h3>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <a href="index.html" class="link-card flex items-center p-4 bg-blue-500 hover:bg-blue-600 text-white rounded-lg">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        애플리케이션 실행
+                    </a>
+                    <a href=".github/copilot-instructions.md" class="link-card flex items-center p-4 bg-gray-600 hover:bg-gray-700 text-white rounded-lg">
+                        <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                        개발 가이드 보기
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-12 pt-6 border-t border-gray-200 dark:border-gray-700 text-center text-gray-600 dark:text-gray-400">
+            <p>문제가 있나요? <a href="https://github.com/features/copilot" class="text-blue-500 hover:underline">GitHub Copilot</a>에게 문의하세요</p>
+        </footer>
+    </div>
+
+    <script>
+        // 다크 모드 감지 및 적용
+        if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+    </script>
+</body>
+</html>
