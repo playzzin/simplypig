@@ -19,7 +19,9 @@ function isPageLink(href){
 
 function loadIntoFrame(href){
   if (!contentFrame || !href) return;
-  contentFrame.setAttribute('src', normalizePageHref(href));
+  // ensure iframe uses an absolute path so browsers always resolve against site root
+  const src = '/' + normalizePageHref(href);
+  contentFrame.setAttribute('src', src);
 }
 
 function setSidebarCollapsed(collapsed){
@@ -169,8 +171,9 @@ allMenuLinks.forEach(link => {
       allMenuLinks.forEach(l => {
         const href = l.getAttribute('href');
         if (!href || href === '#') return;
+        // compare using absolute path to avoid mismatches when hrefs are relative
         const a = document.createElement('a');
-        a.href = normalizePageHref(href);
+        a.href = '/' + normalizePageHref(href);
         const path = a.pathname.replace(/\/+/g, '/');
         if (path === srcPath) matched = l;
       });
