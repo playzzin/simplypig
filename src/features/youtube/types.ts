@@ -1,3 +1,5 @@
+export type MediaPlatform = "youtube" | "tiktok";
+
 export interface YtCategory {
     id: string;
     userId: string;
@@ -10,11 +12,12 @@ export interface YtCategory {
 export interface YtVideo {
     id: string;
     userId: string;
-    videoId: string; // YouTube videoId
-    url: string; // normalized watch url
+    platform: MediaPlatform;
+    videoId: string; // platform-specific id (youtube videoId / tiktok id)
+    url: string; // normalized url
     title: string;
     channelName: string | null;
-    thumbnailUrl: string;
+    thumbnailUrl: string | null;
     categoryId: string;
     note: string;
     progressSec: number;
@@ -35,11 +38,12 @@ export interface YtCategoryCreateInput {
 }
 
 export interface YtVideoCreateInput {
+    platform: MediaPlatform;
     videoId: string;
     url: string;
     title: string;
     channelName: string | null;
-    thumbnailUrl: string;
+    thumbnailUrl: string | null;
     categoryId: string;
     note: string;
 }

@@ -38,4 +38,39 @@ export const fetchYoutubeMetadata = async (normalizedWatchUrl: string, videoId: 
     }
 };
 
+export type TiktokMetadata = {
+    title: string;
+    channelName: string | null;
+    thumbnailUrl: string | null;
+    source: "oembed" | "fallback";
+};
+
+type TiktokOEmbedLike = {
+    title?: unknown;
+    author_name?: unknown;
+    thumbnail_url?: unknown;
+};
+
+export const fetchTiktokMetadata = async (normalizedUrl: string): Promise<TiktokMetadata> => {
+    // NOTE: TikTok은 환경에 따라 CORS/차단이 있을 수 있어 "best-effort + fallback"으로 처리한다.
+    const endpoint = `https://www.tiktok.com/oembed?url=${encodeURIComponent(normalizedUrl)}`;
+
+    try {
+        const res = await fetch(endpoint, { method: "GET" });
+        if (!res.ok) throw new Error("oEmbed request failed");
+        const json: unknown = await res.json();
+        const data = json as TiktokOEmbedLike;
+
+        const title = typeof data.title === "string" && data.title.trim().length > 0 ? data.title.trim() : "TikTok";
+        const channelName =
+            typeof data.author_name === "string" && data.author_name.trim().length > 0 ? data.author_name.trim() : null;
+        const thumbnailUrl =
+            typeof data.thumbnail_url === "string" && data.thumbnail_url.trim().length > 0 ? data.thumbnail_url.trim() : null;
+
+        return { title, channelName, thumbnailUrl, source: "oembed" };
+    } catch {
+        return { title: "TikTok", channelName: null, thumbnailUrl: null, source: "fallback" };
+    }
+};
+
 

@@ -3,10 +3,11 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { MEMO_ROUTES } from "../../memo/constants";
 import { YT_ROUTES } from "../constants";
-import { fetchYoutubeMetadata } from "../api/oembed";
+import { fetchTiktokMetadata, fetchYoutubeMetadata } from "../api/oembed";
 import { useYtCategoriesQuery } from "../hooks/useYtCategories";
 import { useCreateYtVideoMutation } from "../hooks/useYtVideos";
-import { parseYoutubeUrl } from "../lib/youtubeUrl";
+import { parseMediaUrl } from "../lib/mediaUrl";
+import type { MediaPlatform } from "../types";
 
 interface YtAddPageProps {
     uid: string | null;
@@ -24,11 +25,12 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
     const [urlInput, setUrlInput] = useState("");
     const [note, setNote] = useState("");
 
+    const [platform, setPlatform] = useState<MediaPlatform>("youtube");
     const [parsedVideoId, setParsedVideoId] = useState<string | null>(null);
     const [normalizedUrl, setNormalizedUrl] = useState<string | null>(null);
     const [title, setTitle] = useState<string>("");
     const [channelName, setChannelName] = useState<string | null>(null);
-    const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
+    const [thumbnailUrl, setThumbnailUrl] = useState<string | null>(null);
     const [metaSource, setMetaSource] = useState<"oembed" | "fallback" | null>(null);
     const [autoPreviewPending, setAutoPreviewPending] = useState(false);
 
@@ -64,21 +66,31 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
 
     const preview = async () => {
         try {
-            const parsed = parseYoutubeUrl(urlInput);
-            setParsedVideoId(parsed.videoId);
+            const parsed = parseMediaUrl(urlInput);
+            setPlatform(parsed.platform);
+            setParsedVideoId(parsed.mediaId);
             setNormalizedUrl(parsed.normalizedUrl);
 
-            const meta = await fetchYoutubeMetadata(parsed.normalizedUrl, parsed.videoId);
-            setTitle(meta.title);
-            setChannelName(meta.channelName);
-            setThumbnailUrl(meta.thumbnailUrl);
-            setMetaSource(meta.source);
+            if (parsed.platform === "youtube") {
+                const meta = await fetchYoutubeMetadata(parsed.normalizedUrl, parsed.mediaId);
+                setTitle(meta.title);
+                setChannelName(meta.channelName);
+                setThumbnailUrl(meta.thumbnailUrl);
+                setMetaSource(meta.source);
+            } else {
+                const meta = await fetchTiktokMetadata(parsed.normalizedUrl);
+                setTitle(meta.title);
+                setChannelName(meta.channelName);
+                setThumbnailUrl(meta.thumbnailUrl);
+                setMetaSource(meta.source);
+            }
         } catch (e: unknown) {
+            setPlatform("youtube");
             setParsedVideoId(null);
             setNormalizedUrl(null);
             setTitle("");
             setChannelName(null);
-            setThumbnailUrl("");
+            setThumbnailUrl(null);
             setMetaSource(null);
             if (e instanceof Error) toast.error(e.message);
             else toast.error("미리보기에 실패했습니다.");
@@ -100,9 +112,11 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
             if (!uid) throw new Error("로그인이 필요합니다.");
             if (!parsedVideoId || !normalizedUrl) throw new Error("먼저 미리보기를 실행하세요.");
             if (!categoryId) throw new Error("카테고리를 선택하세요.");
-            if (!title || !thumbnailUrl) throw new Error("메타데이터를 불러오지 못했습니다.");
+            if (!title) throw new Error("메타데이터를 불러오지 못했습니다.");
+            if (platform === "youtube" && !thumbnailUrl) throw new Error("YouTube 썸네일을 불러오지 못했습니다.");
 
             await createVideo.mutateAsync({
+                platform,
                 videoId: parsedVideoId,
                 url: normalizedUrl,
                 title,
@@ -213,19 +227,26 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
                         </div>
                     </div>
 
-                    {thumbnailUrl && (
+                    {(thumbnailUrl || title) && (
                         <div className="grid grid-cols-1 gap-3 md:grid-cols-[220px_1fr]">
-                            <img
-                                className="w-full rounded-xl border border-white/10 object-cover"
-                                src={thumbnailUrl}
-                                alt="유튜브 썸네일"
-                                loading="lazy"
-                            />
+                            {thumbnailUrl ? (
+                                <img
+                                    className="w-full rounded-xl border border-white/10 object-cover"
+                                    src={thumbnailUrl}
+                                    alt="미디어 썸네일"
+                                    loading="lazy"
+                                />
+                            ) : (
+                                <div className="flex h-[124px] w-full items-center justify-center rounded-xl border border-white/10 bg-slate-950/30 text-xs font-semibold text-slate-300">
+                                    썸네일 없음
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <div className="text-sm font-semibold text-slate-100">{title}</div>
                                 <div className="text-xs text-slate-300">{channelName ?? "채널 정보 없음"}</div>
                                 <div className="text-xs text-slate-400">
-                                    메타 소스: {metaSource === "oembed" ? "oEmbed(간단/빠름)" : "fallback(썸네일만)"}
+                                    플랫폼: {platform === "youtube" ? "YouTube" : "TikTok"} · 메타 소스:{" "}
+                                    {metaSource === "oembed" ? "oEmbed(간단/빠름)" : "fallback(최소 정보)"}
                                 </div>
                                 <div className="grid gap-2">
                                     <label className="text-xs font-semibold text-slate-300">간단 메모</label>

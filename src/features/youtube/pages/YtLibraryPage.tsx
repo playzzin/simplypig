@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, ListPlus, Pencil, Play, Trash2 } from "lucide-react";
+import { CheckCircle2, ExternalLink, ListPlus, Pencil, Play, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { YT_ROUTES, buildYtEditRoute, buildYtWatchRoute } from "../constants";
 import { useYtCategoriesQuery } from "../hooks/useYtCategories";
@@ -127,6 +127,11 @@ export const YtLibraryPage: React.FC<YtLibraryPageProps> = ({ uid }) => {
         try {
             if (!uid) throw new Error("로그인이 필요합니다.");
             if (queueSet.has(videoDocId)) return;
+            const v = videos.find((it) => it.id === videoDocId) ?? null;
+            if (v?.platform !== "youtube") {
+                toast.error("현재 큐/연속시청은 YouTube만 지원합니다.");
+                return;
+            }
             const next = [...queue, videoDocId];
             await updateQueue.mutateAsync(next);
             toast.success("큐에 추가했어요.");
@@ -307,6 +312,7 @@ export const YtLibraryPage: React.FC<YtLibraryPageProps> = ({ uid }) => {
                         const tone = cat?.colorHex ?? "#94A3B8";
                         const isPlaying = activePlayId === v.id;
                         const noteDraft = noteDraftById[v.id] ?? v.note;
+                        const isYoutube = v.platform === "youtube";
 
                         return (
                             <div
@@ -317,15 +323,17 @@ export const YtLibraryPage: React.FC<YtLibraryPageProps> = ({ uid }) => {
                                 <button
                                     type="button"
                                     className="relative block w-full text-left"
-                                    onClick={() => onTogglePlay(v.id)}
-                                    aria-label={isPlaying ? "재생 닫기" : "카드에서 재생"}
+                                    onClick={() => {
+                                        if (isYoutube) onTogglePlay(v.id);
+                                        else window.open(v.url, "_blank", "noreferrer");
+                                    }}
+                                    aria-label={isYoutube ? (isPlaying ? "재생 닫기" : "카드에서 재생") : "틱톡 열기"}
                                 >
-                                    <img
-                                        className="aspect-video w-full object-cover"
-                                        src={v.thumbnailUrl}
-                                        alt={v.title}
-                                        loading="lazy"
-                                    />
+                                    {v.thumbnailUrl ? (
+                                        <img className="aspect-video w-full object-cover" src={v.thumbnailUrl} alt={v.title} loading="lazy" />
+                                    ) : (
+                                        <div className="aspect-video w-full bg-slate-950/30" />
+                                    )}
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                                     {/* progress bar (durationSec가 있을 때만 정확) */}
                                     <div className="absolute left-0 right-0 bottom-0 h-1 bg-black/30">
@@ -344,6 +352,9 @@ export const YtLibraryPage: React.FC<YtLibraryPageProps> = ({ uid }) => {
                                             <div className="flex items-center gap-2">
                                                 <span className="h-2.5 w-2.5 rounded-full" style={{ background: tone }} aria-hidden />
                                                 <span className="text-xs font-semibold text-slate-200/90">{cat?.name ?? "미지정"}</span>
+                                                <span className="rounded-md border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-bold text-slate-200">
+                                                    {isYoutube ? "YT" : "TT"}
+                                                </span>
                                                 {v.completed && (
                                                     <span className="inline-flex items-center gap-1 rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-bold text-emerald-100">
                                                         <CheckCircle2 size={12} />
@@ -355,12 +366,12 @@ export const YtLibraryPage: React.FC<YtLibraryPageProps> = ({ uid }) => {
                                             <div className="mt-1 text-xs text-slate-200/80">{v.channelName ?? "채널 정보 없음"}</div>
                                         </div>
                                         <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/15 bg-white/10 text-white">
-                                            <Play size={18} />
+                                            {isYoutube ? <Play size={18} /> : <ExternalLink size={18} />}
                                         </span>
                                     </div>
                                 </button>
 
-                                {isPlaying && (
+                                {isPlaying && isYoutube && (
                                     <div className="p-3 space-y-3">
                                         <div className="aspect-video w-full overflow-hidden rounded-xl border border-white/10 bg-black">
                                             <iframe

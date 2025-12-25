@@ -41,6 +41,7 @@ export const YtWatchPage: React.FC<YtWatchPageProps> = ({ uid }) => {
 
     const video = useMemo(() => videos.find((v) => v.id === videoDocId) ?? null, [videos, videoDocId]);
     const category = useMemo(() => categories.find((c) => c.id === video?.categoryId) ?? null, [categories, video?.categoryId]);
+    const isYoutubeVideo = video?.platform === "youtube";
 
     const [resumeRequested, setResumeRequested] = useState(false);
     const [abEnabled, setAbEnabled] = useState(false);
@@ -49,7 +50,7 @@ export const YtWatchPage: React.FC<YtWatchPageProps> = ({ uid }) => {
     const lastSeekRef = useRef<number>(0);
 
     const playerHook = useYoutubePlayer({
-        videoId: video?.videoId ?? null,
+        videoId: isYoutubeVideo ? video?.videoId ?? null : null,
         autoplay: true,
         startSeconds: resumeRequested ? Math.floor(video?.progressSec ?? 0) : 0,
     });
@@ -88,6 +89,39 @@ export const YtWatchPage: React.FC<YtWatchPageProps> = ({ uid }) => {
             setUsePerVideoPrefs(false);
         }
     }, [video?.id]);
+
+    if (video && !isYoutubeVideo) {
+        return (
+            <main className="main-content">
+                <div className="card glass space-y-4">
+                    <div>
+                        <h2 className="view-title">큰 보기</h2>
+                        <p className="lead">현재 “큰 보기 / 플레이어 컨트롤”은 YouTube만 지원합니다.</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4 space-y-2">
+                        <div className="text-sm font-bold text-slate-100">{video.title}</div>
+                        <div className="text-xs text-slate-300">{video.channelName ?? "채널 정보 없음"}</div>
+                        <div className="flex items-center gap-2 pt-2">
+                            <button
+                                type="button"
+                                className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+                                onClick={() => window.open(video.url, "_blank", "noreferrer")}
+                            >
+                                TikTok 열기
+                            </button>
+                            <button
+                                type="button"
+                                className="h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm font-semibold text-slate-100 transition hover:bg-white/10"
+                                onClick={() => navigate(YT_ROUTES.library)}
+                            >
+                                라이브러리로
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        );
+    }
 
     // 저장된 A/B 루프 복원
     useEffect(() => {

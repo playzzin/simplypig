@@ -13,14 +13,29 @@ export const ytCategoryUpdateSchema = ytCategoryCreateSchema;
 
 export const ytVideoIdSchema = z.string().regex(/^[a-zA-Z0-9_-]{6,20}$/, "유효하지 않은 YouTube videoId 입니다.");
 
+const ytPlatformSchema = z.enum(["youtube", "tiktok"]).default("youtube");
+
+const ytGenericIdSchema = z.string().trim().min(2).max(80);
+
 export const ytVideoCreateSchema = z.object({
-    videoId: ytVideoIdSchema,
+    platform: ytPlatformSchema,
+    videoId: ytGenericIdSchema,
     url: z.string().url(),
     title: z.string().trim().min(1).max(160),
     channelName: z.string().trim().min(1).max(120).nullable(),
-    thumbnailUrl: z.string().url(),
+    thumbnailUrl: z.string().url().nullable(),
     categoryId: z.string().trim().min(1),
     note: z.string().trim().max(500),
+}).superRefine((val, ctx) => {
+    if (val.platform === "youtube") {
+        const ok = ytVideoIdSchema.safeParse(val.videoId);
+        if (!ok.success) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["videoId"], message: "유효하지 않은 YouTube videoId 입니다." });
+        }
+        if (!val.thumbnailUrl) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["thumbnailUrl"], message: "YouTube 썸네일을 불러오지 못했습니다." });
+        }
+    }
 });
 
 export const ytVideoUpdateSchema = z.object({
@@ -46,11 +61,12 @@ export const ytCategoryDocSchema = z.object({
 
 export const ytVideoDocSchema = z.object({
     userId: z.string().min(1),
-    videoId: ytVideoIdSchema,
+    platform: ytPlatformSchema.optional().default("youtube"),
+    videoId: ytGenericIdSchema,
     url: z.string().url(),
     title: z.string().min(1).max(160),
     channelName: z.string().min(1).max(120).nullable(),
-    thumbnailUrl: z.string().url(),
+    thumbnailUrl: z.string().url().nullable().default(null),
     categoryId: z.string().min(1),
     note: z.string().max(500),
     progressSec: z.number().min(0).default(0),
@@ -63,6 +79,13 @@ export const ytVideoDocSchema = z.object({
     completed: z.boolean().default(false),
     createdAt: z.date(),
     updatedAt: z.date(),
+}).superRefine((val, ctx) => {
+    if (val.platform === "youtube") {
+        const ok = ytVideoIdSchema.safeParse(val.videoId);
+        if (!ok.success) {
+            ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["videoId"], message: "유효하지 않은 YouTube videoId 입니다." });
+        }
+    }
 });
 
 export const ytUserPrefsDocSchema = z.object({
