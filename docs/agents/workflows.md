@@ -15,6 +15,14 @@
 - UI 모드: "지금부터 [UI-Developer] 모드. shadcn Dialog로 프로필 편집 UI 골격만 작성. 로직 없음."
 - Logic 모드: "지금부터 [Logic-Developer] 모드. users 컬렉션 Zod 스키마 + useUserQuery/useUpdateUserMutation 훅 구현. UI는 수정 금지."
 
+## Skill(스킬) 템플릿 사용 가이드
+- `sequential-thinking`: 복잡한 작업을 시작할 때 항상 먼저 사용(계획/리스크/전략/검증).
+  - 문서: `docs/agents/sequential-thinking.md`
+- `frontend-design`: UI 품질을 끌어올리는 작업에서 사용(상태/접근성/일관성 체크).
+  - 문서: `docs/agents/frontend-design.md`
+- `typescript-write`: TS 타입/스키마/FireStore 경계 타입 정리 작업에서 사용.
+  - 문서: `docs/agents/typescript-write.md`
+
 ## 체크리스트
 - UI와 로직 파일 경로 분리 준수.
 - Zod 없는 데이터 처리 금지.

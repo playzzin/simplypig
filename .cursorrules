@@ -118,4 +118,12 @@ export const MyComponent = () => {
 - "지금부터 [UI-Developer] 모드. shadcn Dialog로 프로필 편집 UI 골격만 작성."
 - "지금부터 [Logic-Developer] 모드. users 컬렉션 Zod 스키마 + TanStack Query 훅 구현. UI는 건드리지 마."
 
+## 9. Skill(스킬) 내장 템플릿
+- `sequential-thinking`: 복잡한 작업 시작 시 “계획→리스크→전략→검증”을 먼저 출력한다.
+  - 문서: `docs/agents/sequential-thinking.md`
+- `frontend-design`: UI/UX 품질 개선 작업에서는 접근성/상태/일관성 체크리스트를 따른다.
+  - 문서: `docs/agents/frontend-design.md`
+- `typescript-write`: TS strict 환경에서 타입/스키마/경계(Firestore) 정리를 우선한다.
+  - 문서: `docs/agents/typescript-write.md`
+
 
