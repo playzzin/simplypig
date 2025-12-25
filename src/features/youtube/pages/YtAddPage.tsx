@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { MEMO_ROUTES } from "../../memo/constants";
 import { YT_ROUTES } from "../constants";
@@ -14,6 +14,7 @@ interface YtAddPageProps {
 
 export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
     const navigate = useNavigate();
+    const location = useLocation();
     const categoriesQuery = useYtCategoriesQuery(uid);
     const createVideo = useCreateYtVideoMutation(uid);
 
@@ -29,6 +30,7 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
     const [channelName, setChannelName] = useState<string | null>(null);
     const [thumbnailUrl, setThumbnailUrl] = useState<string>("");
     const [metaSource, setMetaSource] = useState<"oembed" | "fallback" | null>(null);
+    const [autoPreviewPending, setAutoPreviewPending] = useState(false);
 
     useEffect(() => {
         if (categoryId) return;
@@ -37,6 +39,28 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
     }, [categories, categoryId]);
 
     const canPreview = useMemo(() => urlInput.trim().length > 0, [urlInput]);
+
+    const extractPrefillUrl = (search: string): string | null => {
+        const params = new URLSearchParams(search);
+        // 북마클릿/공유 입력에서 흔히 쓰는 파라미터명을 폭넓게 허용
+        const raw = params.get("url") ?? params.get("u") ?? params.get("text");
+        const candidate = raw?.trim();
+        if (!candidate) return null;
+        return candidate;
+    };
+
+    useEffect(() => {
+        const prefill = extractPrefillUrl(location.search);
+        if (!prefill) return;
+
+        // 사용자가 이미 입력을 시작했으면 덮어쓰지 않음
+        if (urlInput.trim().length > 0) return;
+
+        setUrlInput(prefill);
+        // uid(익명 로그인 포함)가 아직 준비되지 않았더라도, 준비되는 순간 자동 미리보기 실행
+        setAutoPreviewPending(true);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [location.search]);
 
     const preview = async () => {
         try {
@@ -60,6 +84,14 @@ export const YtAddPage: React.FC<YtAddPageProps> = ({ uid }) => {
             else toast.error("미리보기에 실패했습니다.");
         }
     };
+
+    useEffect(() => {
+        if (!autoPreviewPending) return;
+        if (!uid) return;
+        if (!canPreview) return;
+        void preview().finally(() => setAutoPreviewPending(false));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [autoPreviewPending, uid, canPreview]);
 
     const canSave = Boolean(uid) && Boolean(parsedVideoId) && Boolean(normalizedUrl) && categoryId.trim().length > 0;
 
