@@ -96,7 +96,7 @@ export type UseYoutubePlayerParams = {
 };
 
 export type UseYoutubePlayerResult = {
-    containerRef: React.RefObject<HTMLDivElement>;
+    containerRef: React.RefObject<HTMLDivElement | null>;
     player: YtPlayer | null;
     isReady: boolean;
     error: string | null;

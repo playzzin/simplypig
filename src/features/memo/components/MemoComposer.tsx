@@ -28,8 +28,6 @@ export const MemoComposer: React.FC<MemoComposerProps> = ({ uid, variant = "page
         }
     }, [categories, categoryId]);
 
-    const selectedCategory = useMemo(() => categories.find((c) => c.id === categoryId) ?? null, [categories, categoryId]);
-
     const derivedTitle = useMemo(() => {
         const firstLine = content.split(/\r?\n/)[0] ?? "";
         return firstLine.trim();

@@ -102,13 +102,15 @@ export const listYtCategories = async (uid: string): Promise<YtCategory[]> => {
 };
 
 export const createYtCategory = async (uid: string, input: YtCategoryCreateInput): Promise<string> => {
-    const created = await addDoc(categoriesCol, {
+    // NOTE: withConverter 컬렉션에 addDoc 할 때 제네릭 타입이 id 필드를 요구하는 문제가 있어,
+    // 쓰기(create)만 raw collection으로 수행하고, 읽기(list/get)는 converter + Zod 파싱을 유지한다.
+    const created = await addDoc(collection(db, COLLECTIONS.categories), {
         userId: uid,
         name: input.name,
         colorHex: input.colorHex,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-    } satisfies WithFieldValue<Omit<YtCategory, "id">>);
+    });
     return created.id;
 };
 
@@ -133,7 +135,8 @@ export const listYtVideos = async (uid: string): Promise<YtVideo[]> => {
 };
 
 export const createYtVideo = async (uid: string, input: YtVideoCreateInput): Promise<string> => {
-    const created = await addDoc(videosCol, {
+    // NOTE: create는 raw collection을 사용(위 createYtCategory 주석 참고)
+    const created = await addDoc(collection(db, COLLECTIONS.videos), {
         userId: uid,
         ...input,
         progressSec: 0,
@@ -146,7 +149,7 @@ export const createYtVideo = async (uid: string, input: YtVideoCreateInput): Pro
         completed: false,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
-    } satisfies WithFieldValue<Omit<YtVideo, "id">>);
+    });
     return created.id;
 };
 

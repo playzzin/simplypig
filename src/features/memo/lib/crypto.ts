@@ -20,6 +20,14 @@ const randomBytes = (len: number): Uint8Array => {
     return out;
 };
 
+const toArrayBuffer = (bytes: Uint8Array): ArrayBuffer => {
+    // TS 5.9에서 WebCrypto BufferSource가 ArrayBuffer(ArrayBufferLike 제외)를 요구하는 경우가 있어,
+    // 안전하게 ArrayBuffer로 복사해서 넘긴다.
+    const out = new ArrayBuffer(bytes.byteLength);
+    new Uint8Array(out).set(bytes);
+    return out;
+};
+
 export type SecretCryptoPayloadV1 = {
     v: 1;
     kdf: "PBKDF2";
@@ -35,7 +43,7 @@ const deriveAesKey = async (password: string, salt: Uint8Array, iterations: numb
         "deriveKey",
     ]);
     return await crypto.subtle.deriveKey(
-        { name: "PBKDF2", salt, iterations, hash: "SHA-256" },
+        { name: "PBKDF2", salt: toArrayBuffer(salt), iterations, hash: "SHA-256" },
         baseKey,
         { name: "AES-GCM", length: 256 },
         false,
@@ -49,7 +57,7 @@ export const encryptSecretText = async (plaintext: string, password: string): Pr
     const iv = randomBytes(12);
     const key = await deriveAesKey(password, salt, iterations);
 
-    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, textEncoder.encode(plaintext));
+    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv: toArrayBuffer(iv) }, key, textEncoder.encode(plaintext));
 
     return {
         v: 1,
@@ -68,7 +76,7 @@ export const decryptSecretText = async (payload: SecretCryptoPayloadV1, password
     const ciphertext = fromB64(payload.ciphertextB64);
     const key = await deriveAesKey(password, salt, payload.iterations);
 
-    const plaintextBytes = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+    const plaintextBytes = await crypto.subtle.decrypt({ name: "AES-GCM", iv: toArrayBuffer(iv) }, key, toArrayBuffer(ciphertext));
     return textDecoder.decode(plaintextBytes);
 };
 
